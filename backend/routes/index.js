@@ -6,6 +6,7 @@ const router = express.Router();
 // actual route
 
 router.use("/user" , userRouter)
+router.use("/account" , accountRouter)
 
 
 // exporting the router

@@ -2,10 +2,11 @@ const express = require('express')
 const router = express.Router()
 const zod = require('zod')
 const {  User } = require('../db')
+const { JWT_SECRET } = require('../config')
 
 const signupBody = zod.object({
     username :zod.string().email(),
-    password :zod.string().password(),
+    password :zod.string(),
     lastName :zod.string() ,
     firstName:zod.string() 
 })
@@ -38,6 +39,39 @@ router.post("/signup" , async (req , res) =>{
 
     res.json({
         message : "user created successfully"
+    })
+})
+
+const signinBody = zod.object({
+    username : zod.string().email(),
+    password : zod.password()
+})
+
+router.post("/signin", async (req,res) => {
+    const { success} = signinBody.safeParse(req.body)
+    if ( !success){
+        res.status(411).json({
+            message : "Error while logging in"
+        })
+    }
+
+    const user = await User.findone({
+        username : req.body.username ,
+        password : req.body.username
+    });
+
+    if(user){
+        const token = jwt.sign({
+            userId : user._id
+        },JWT_SECRET)
+        res.json({
+            message : "Logged in successfully",
+            token:token
+        })
+    }
+
+    res.status(403).json({
+        message : "Error whole logging in"
     })
 })
 
