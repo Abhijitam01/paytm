@@ -4,6 +4,7 @@ const zod = require('zod')
 const {  User } = require('../db')
 const { JWT_SECRET } = require('../config')
 const { authMiddleware } = require('../middleware')
+const mongoose = require('mongoose')
 
 const signupBody = zod.object({
     username :zod.string().email(),
@@ -36,6 +37,10 @@ router.post("/signup" , async (req , res) =>{
         lastName : req.body.lastName,
         firstName : req.body.firstName,
         password : req.body.password  
+    })
+    await Account.create({
+        userId,
+        balance :1 + Math.random() * 100000
     })
 
     res.json({
