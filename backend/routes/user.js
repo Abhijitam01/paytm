@@ -4,7 +4,7 @@ const zod = require('zod');
 const jwt = require('jsonwebtoken');
 const { User, Account } = require('../db');
 const { JWT_SECRET } = require('../config');
-const { authMiddleware } = require('../middleware');
+const authMiddleware = require('../middleware');
 
 const signupBody = zod.object({
     username: zod.string().email(),
@@ -57,43 +57,51 @@ router.post("/signup", async (req, res) => {
 });
 
 const signinBody = zod.object({
-    username : zod.string().email(),
-    password : zod.string()
-})
+    username: zod.string().email(),
+    password: zod.string()
+});
 
-router.post("/signin", async (req,res) => {
-    const { success} = signinBody.safeParse(req.body)
-    if ( !success){
-        res.status(411).json({
-            message : "Error while logging in"
-        })
+router.post("/signin", async (req, res) => {
+    try {
+        const { success } = signinBody.safeParse(req.body);
+        if (!success) {
+            return res.status(411).json({
+                message: "Error while logging in"
+            });
+        }
+
+        const user = await User.findOne({
+            username: req.body.username,
+            password: req.body.password
+        });
+
+        if (user) {
+            const token = jwt.sign({
+                userId: user._id
+            }, JWT_SECRET);
+
+            return res.json({
+                message: "Logged in successfully",
+                token: token
+            });
+        }
+
+        res.status(403).json({
+            message: "Error while logging in"
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Server error during login",
+            error: error.message
+        });
     }
-
-    const user = await User.findOne({
-        username : req.body.username ,
-        password : req.body.password
-    });
-
-    if(user){
-        const token = jwt.sign({
-            userId : user._id
-        },JWT_SECRET)
-        res.json({
-            message : "Logged in successfully",
-            token:token
-        })
-    }
-
-    res.status(403).json({
-        message : "Error whole logging in"
-    })
-})
+});
 
 const updateBody = zod.object({
-    password : zod.string().optional(),
-    lastName : zod.string().optional(),
-    firstName : zod.string().optional()
-})
+    password: zod.string().optional(),
+    lastName: zod.string().optional(),
+    firstName: zod.string().optional()
+});
 
 router.put("/", authMiddleware, async (req, res) => {
     try {
@@ -119,28 +127,28 @@ router.put("/", authMiddleware, async (req, res) => {
     }
 });
 
-router.get("/bulk" ,authMiddleware, async (req, res)=>{
+router.get("/bulk", authMiddleware, async (req, res) => {
     const filter = req.query.filter || "";
     const users = await User.find({
-        $or:[{
-            firstName:{
-                "$regex" : filter
+        $or: [{
+            firstName: {
+                "$regex": filter
             }
-        },{
-            lastName : {
-                "$regex" : filter
+        }, {
+            lastName: {
+                "$regex": filter
             }
         }]
-    })
+    });
 
     res.json({
-        user:users.map(user => ({
-            username : user.username,
-            firstName : user.firstName,
-            lastName : user.lastName,
-            _id : user._id
+        user: users.map(user => ({
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            id: user.id
         }))
-    })
-})
+    });
+});
 
 module.exports = router;
