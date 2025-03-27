@@ -20,7 +20,7 @@ router.put("/transfer", authMiddleware, async (req , res) => {
     session.startTransaction();
     const { amount , to } = req.body;
 
-    const account = await Account.findone({
+    const account = await Account.findOne({
         userId : req.userId
     }).session(session);
 
@@ -51,7 +51,7 @@ router.put("/transfer", authMiddleware, async (req , res) => {
     await Account.updateOne({
         userId : to
     },{
-        $inc : {balance : amount}
+        $inc : {balance : +amount}
     }).session(session)
 
     await session.commitTransaction();
