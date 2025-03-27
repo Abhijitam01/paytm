@@ -3,6 +3,7 @@ const router = express.Router()
 const zod = require('zod')
 const {  User } = require('../db')
 const { JWT_SECRET } = require('../config')
+const { authMiddleware } = require('../middleware')
 
 const signupBody = zod.object({
     username :zod.string().email(),
