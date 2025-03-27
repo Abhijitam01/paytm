@@ -1,5 +1,5 @@
-const JWT_SECRET = "BOOTCAMP"
+const JWT_SECRET = "BOOTCAMP";
 
 module.exports = {
     JWT_SECRET
-}
+};
